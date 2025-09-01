@@ -10,7 +10,6 @@ use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
 use crate::evm::utils::{validate_bytes32_param, validate_data_param, MemoryAccessor};
-use crate::{host_error, host_info};
 
 /// Get the size of the call data
 /// Returns the size of the current call data in bytes
@@ -27,7 +26,6 @@ where
     let evmhost = &instance.extra_ctx;
     let call_data_size = evmhost.get_call_data_size();
 
-    host_info!("get_call_data_size called, returning: {}", call_data_size);
     call_data_size
 }
 
@@ -51,13 +49,6 @@ pub fn call_data_copy<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "call_data_copy called: result_offset={}, data_offset={}, length={}",
-        result_offset,
-        data_offset,
-        length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -107,23 +98,8 @@ where
     }
     // Write the entire buffer to memory (including any zero-filled portions)
     // This ensures we always write exactly 'length' bytes as requested
-    memory
-        .write_bytes(result_offset_u32, &buffer)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write call data to memory at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes(result_offset_u32, &buffer)?;
 
-    host_info!(
-        "call_data_copy completed: wrote {} bytes to memory (copied {} bytes from call data, {} bytes zero-filled)",
-        length_u32,
-        copied_bytes,
-        length_u32 as usize - copied_bytes
-    );
     Ok(())
 }
 
@@ -143,7 +119,6 @@ where
     let evmhost = &instance.extra_ctx;
     let gas_left = evmhost.get_gas_left(gas_left as i64);
 
-    host_info!("get_gas_left called, returning: {}", gas_left);
     gas_left
 }
 
@@ -157,8 +132,6 @@ pub fn get_tx_gas_price<T>(instance: &ZenInstance<T>, result_offset: i32) -> Hos
 where
     T: EvmHost,
 {
-    host_info!("get_tx_gas_price called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -169,18 +142,7 @@ where
     let gas_price = evmhost.get_tx_gas_price();
 
     // Write the gas price to memory
-    memory.write_bytes32(offset, gas_price).map_err(|e| {
-        host_error!(
-            "Failed to write gas price at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_bytes32(offset, gas_price)?;
 
-    host_info!(
-        "get_tx_gas_price completed: gas price written to offset {}",
-        result_offset
-    );
     Ok(())
 }

@@ -9,7 +9,6 @@ use crate::evm::traits::EvmHost;
 use crate::evm::utils::{
     validate_address_param, validate_bytes32_param, validate_data_param, MemoryAccessor,
 };
-use crate::{host_error, host_info};
 
 /// Call another contract (CALL opcode)
 /// Performs a call to another contract with the specified parameters
@@ -38,15 +37,6 @@ pub fn call_contract<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "call_contract called: gas={}, addr_offset={}, value_offset={}, data_offset={}, data_length={}",
-        gas,
-        addr_offset,
-        value_offset,
-        data_offset,
-        data_length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -57,48 +47,16 @@ where
         validate_data_param(instance, data_offset, data_length)?;
 
     // Read the target address
-    let target_address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!(
-            "Failed to read target address at offset {}: {}",
-            addr_offset,
-            e
-        );
-        e
-    })?;
+    let target_address = memory.read_address(addr_offset_u32)?;
 
     // Read the value to send
-    let call_value = memory.read_bytes32(value_offset_u32).map_err(|e| {
-        host_error!(
-            "Failed to read call value at offset {}: {}",
-            value_offset,
-            e
-        );
-        e
-    })?;
+    let call_value = memory.read_bytes32(value_offset_u32)?;
 
     // Read the call data
-    let call_data = memory
-        .read_bytes_vec(data_offset_u32, data_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read call data at offset {} length {}: {}",
-                data_offset,
-                data_length,
-                e
-            );
-            e
-        })?;
+    let call_data = memory.read_bytes_vec(data_offset_u32, data_length_u32)?;
 
     // Get the caller address from evmhost
     let caller_address = evmhost.get_caller();
-
-    host_info!(
-        "    📞 Calling contract: target=0x{}, caller=0x{}, value=0x{}, data_len={}",
-        hex::encode(&target_address),
-        hex::encode(&caller_address),
-        hex::encode(&call_value),
-        call_data.len()
-    );
 
     // Execute the contract call using the provider
     let result = evmhost.call_contract(
@@ -110,12 +68,6 @@ where
     );
 
     let success_code = if result.success { 1 } else { 0 };
-    host_info!(
-        "call_contract completed: success={}, return_data_len={}, gas_used={}",
-        result.success,
-        result.return_data.len(),
-        result.gas_used
-    );
 
     Ok(success_code)
 }
@@ -147,15 +99,6 @@ pub fn call_code<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "call_code called: gas={}, addr_offset={}, value_offset={}, data_offset={}, data_length={}",
-        gas,
-        addr_offset,
-        value_offset,
-        data_offset,
-        data_length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -166,46 +109,14 @@ where
         validate_data_param(instance, data_offset, data_length)?;
 
     // Read parameters
-    let target_address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!(
-            "Failed to read target address at offset {}: {}",
-            addr_offset,
-            e
-        );
-        e
-    })?;
+    let target_address = memory.read_address(addr_offset_u32)?;
 
-    let call_value = memory.read_bytes32(value_offset_u32).map_err(|e| {
-        host_error!(
-            "Failed to read call value at offset {}: {}",
-            value_offset,
-            e
-        );
-        e
-    })?;
+    let call_value = memory.read_bytes32(value_offset_u32)?;
 
-    let call_data = memory
-        .read_bytes_vec(data_offset_u32, data_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read call data at offset {} length {}: {}",
-                data_offset,
-                data_length,
-                e
-            );
-            e
-        })?;
+    let call_data = memory.read_bytes_vec(data_offset_u32, data_length_u32)?;
 
     // Get the caller address from evmhost
     let caller_address = evmhost.get_caller();
-
-    host_info!(
-        "    📞 Call code: target=0x{}, caller=0x{}, value=0x{}, data_len={}",
-        hex::encode(&target_address),
-        hex::encode(&caller_address),
-        hex::encode(&call_value),
-        call_data.len()
-    );
 
     // Execute the call code using the provider
     let result = evmhost.call_code(
@@ -217,12 +128,6 @@ where
     );
 
     let success_code = if result.success { 1 } else { 0 };
-    host_info!(
-        "call_code completed: success={}, return_data_len={}, gas_used={}",
-        result.success,
-        result.return_data.len(),
-        result.gas_used
-    );
 
     Ok(success_code)
 }
@@ -252,14 +157,6 @@ pub fn call_delegate<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "call_delegate called: gas={}, addr_offset={}, data_offset={}, data_length={}",
-        gas,
-        addr_offset,
-        data_offset,
-        data_length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -269,47 +166,17 @@ where
         validate_data_param(instance, data_offset, data_length)?;
 
     // Read parameters
-    let target_address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!(
-            "Failed to read target address at offset {}: {}",
-            addr_offset,
-            e
-        );
-        e
-    })?;
+    let target_address = memory.read_address(addr_offset_u32)?;
 
-    let call_data = memory
-        .read_bytes_vec(data_offset_u32, data_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read call data at offset {} length {}: {}",
-                data_offset,
-                data_length,
-                e
-            );
-            e
-        })?;
+    let call_data = memory.read_bytes_vec(data_offset_u32, data_length_u32)?;
 
     // Get the caller address from evmhost (for delegate call, this preserves the original caller)
     let caller_address = evmhost.get_caller();
-
-    host_info!(
-        "    📞 Delegate call: target=0x{}, caller=0x{}, data_len={}",
-        hex::encode(&target_address),
-        hex::encode(&caller_address),
-        call_data.len()
-    );
 
     // Execute the delegate call using the provider
     let result = evmhost.call_delegate(&target_address, &caller_address, &call_data, gas);
 
     let success_code = if result.success { 1 } else { 0 };
-    host_info!(
-        "call_delegate completed: success={}, return_data_len={}, gas_used={}",
-        result.success,
-        result.return_data.len(),
-        result.gas_used
-    );
 
     Ok(success_code)
 }
@@ -339,14 +206,6 @@ pub fn call_static<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "call_static called: gas={}, addr_offset={}, data_offset={}, data_length={}",
-        gas,
-        addr_offset,
-        data_offset,
-        data_length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -356,47 +215,17 @@ where
         validate_data_param(instance, data_offset, data_length)?;
 
     // Read parameters
-    let target_address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!(
-            "Failed to read target address at offset {}: {}",
-            addr_offset,
-            e
-        );
-        e
-    })?;
+    let target_address = memory.read_address(addr_offset_u32)?;
 
-    let call_data = memory
-        .read_bytes_vec(data_offset_u32, data_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read call data at offset {} length {}: {}",
-                data_offset,
-                data_length,
-                e
-            );
-            e
-        })?;
+    let call_data = memory.read_bytes_vec(data_offset_u32, data_length_u32)?;
 
     // Get the caller address from evmhost
     let caller_address = evmhost.get_caller();
-
-    host_info!(
-        "    📞 Static call: target=0x{}, caller=0x{}, data_len={}",
-        hex::encode(&target_address),
-        hex::encode(&caller_address),
-        call_data.len()
-    );
 
     // Execute the static call using the provider
     let result = evmhost.call_static(&target_address, &caller_address, &call_data, gas);
 
     let success_code = if result.success { 1 } else { 0 };
-    host_info!(
-        "call_static completed: success={}, return_data_len={}, gas_used={}",
-        result.success,
-        result.return_data.len(),
-        result.gas_used
-    );
 
     Ok(success_code)
 }
@@ -432,18 +261,6 @@ pub fn create_contract<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "create_contract called: value_offset={}, code_offset={}, code_length={}, data_offset={}, data_length={}, salt_offset={}, is_create2={}, result_offset={}",
-        value_offset,
-        code_offset,
-        code_length,
-        data_offset,
-        data_length,
-        salt_offset,
-        is_create2,
-        result_offset
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -461,41 +278,15 @@ where
     let result_offset_u32 = validate_address_param(instance, result_offset)?;
 
     // Read parameters
-    let value = memory.read_bytes32(value_offset_u32).map_err(|e| {
-        host_error!("Failed to read value at offset {}: {}", value_offset, e);
-        e
-    })?;
+    let value = memory.read_bytes32(value_offset_u32)?;
 
-    let creation_code = memory
-        .read_bytes_vec(code_offset_u32, code_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read creation code at offset {} length {}: {}",
-                code_offset,
-                code_length,
-                e
-            );
-            e
-        })?;
+    let creation_code = memory.read_bytes_vec(code_offset_u32, code_length_u32)?;
 
-    let constructor_data = memory
-        .read_bytes_vec(data_offset_u32, data_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read constructor data at offset {} length {}: {}",
-                data_offset,
-                data_length,
-                e
-            );
-            e
-        })?;
+    let constructor_data = memory.read_bytes_vec(data_offset_u32, data_length_u32)?;
 
     // Read salt if this is CREATE2 (for future use)
     let _salt = if let Some(salt_offset_u32) = salt_offset_u32 {
-        Some(memory.read_bytes32(salt_offset_u32).map_err(|e| {
-            host_error!("Failed to read salt at offset {}: {}", salt_offset, e);
-            e
-        })?)
+        Some(memory.read_bytes32(salt_offset_u32)?)
     } else {
         None
     };
@@ -519,25 +310,9 @@ where
 
     // Write the contract address to memory (or zero address if failed)
     let address_to_write = result.contract_address.unwrap_or([0u8; 20]);
-    memory
-        .write_address(result_offset_u32, &address_to_write)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write contract address at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_address(result_offset_u32, &address_to_write)?;
 
     let success_code = if result.success { 1 } else { 0 };
-    host_info!(
-        "create_contract completed: success={}, address=0x{}, return_data_len={}, gas_used={}",
-        result.success,
-        hex::encode(&address_to_write),
-        result.return_data.len(),
-        result.gas_used
-    );
 
     Ok(success_code)
 }

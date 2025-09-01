@@ -9,7 +9,6 @@ use crate::evm::traits::EvmHost;
 use crate::evm::utils::{
     validate_address_param, validate_bytes32_param, validate_data_param, MemoryAccessor,
 };
-use crate::{host_error, host_info};
 
 /// Get the size of the current contract's code
 /// Returns the size of the contract code including the 4-byte length prefix
@@ -26,7 +25,6 @@ where
     let evmhost = &instance.extra_ctx;
     let code_size = evmhost.get_code_size();
 
-    host_info!("get_code_size called, returning: {}", code_size);
     code_size
 }
 
@@ -47,13 +45,6 @@ pub fn code_copy<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "code_copy called: result_offset={}, code_offset={}, length={}",
-        result_offset,
-        code_offset,
-        length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -101,23 +92,7 @@ where
         }
     }
     // Write the copied data to memory
-    memory
-        .write_bytes(result_offset_u32, &buffer[..copied_bytes])
-        .map_err(|e| {
-            host_error!(
-                "Failed to write code to memory at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
-
-    host_info!(
-        "code_copy completed: copied {} bytes from code offset {} to memory offset {}",
-        copied_bytes,
-        code_offset,
-        result_offset
-    );
+    memory.write_bytes(result_offset_u32, &buffer[..copied_bytes])?;
     Ok(())
 }
 
@@ -140,8 +115,6 @@ pub fn get_external_code_size<T>(
 where
     T: EvmHost,
 {
-    host_info!("get_external_code_size called: addr_offset={}", addr_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -149,24 +122,12 @@ where
     let addr_offset_u32 = validate_address_param(instance, addr_offset)?;
 
     // Read the address
-    let address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!("Failed to read address at offset {}: {}", addr_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "    🔍 Querying external code size for address: 0x{}",
-        hex::encode(&address)
-    );
+    let address = memory.read_address(addr_offset_u32)?;
 
     // Query the external code size using the ExternalCodeProvider trait
     match evmhost.get_external_code_size(&address) {
-        Some(size) => {
-            host_info!("    📏 Retrieved external code size: {}", size);
-            Ok(size)
-        }
+        Some(size) => Ok(size),
         None => {
-            host_info!("    ❌ External contract not found, returning size 0");
             Ok(0) // Return 0 for non-existent contracts
         }
     }
@@ -190,12 +151,6 @@ pub fn get_external_code_hash<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "get_external_code_hash called: addr_offset={}, result_offset={}",
-        addr_offset,
-        result_offset
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -204,61 +159,20 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read the address
-    let address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!("Failed to read address at offset {}: {}", addr_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "    🔍 Querying external code hash for address: 0x{}",
-        hex::encode(&address)
-    );
+    let address = memory.read_address(addr_offset_u32)?;
 
     // Query the external code hash using the ExternalCodeProvider trait
     match evmhost.get_external_code_hash(&address) {
         Some(hash) => {
-            host_info!(
-                "    🔐 Retrieved external code hash: 0x{}",
-                hex::encode(&hash)
-            );
-
             // Write the hash to memory
-            memory
-                .write_bytes32(result_offset_u32, &hash)
-                .map_err(|e| {
-                    host_error!(
-                        "Failed to write code hash at offset {}: {}",
-                        result_offset,
-                        e
-                    );
-                    e
-                })?;
+            memory.write_bytes32(result_offset_u32, &hash)?;
 
-            host_info!(
-                "get_external_code_hash completed: hash written to offset {}",
-                result_offset
-            );
             Ok(())
         }
         None => {
-            host_info!("    ❌ External contract not found, writing zero hash");
-
             // Write zero hash for non-existent contracts
             let zero_hash = [0u8; 32];
-            memory
-                .write_bytes32(result_offset_u32, &zero_hash)
-                .map_err(|e| {
-                    host_error!(
-                        "Failed to write zero hash at offset {}: {}",
-                        result_offset,
-                        e
-                    );
-                    e
-                })?;
-
-            host_info!(
-                "get_external_code_hash completed: zero hash written for non-existent contract"
-            );
+            memory.write_bytes32(result_offset_u32, &zero_hash)?;
             Ok(())
         }
     }
@@ -286,14 +200,6 @@ pub fn external_code_copy<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "external_code_copy called: addr_offset={}, result_offset={}, code_offset={}, length={}",
-        addr_offset,
-        result_offset,
-        code_offset,
-        length
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -310,24 +216,11 @@ where
     }
 
     // Read the address
-    let address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!("Failed to read address at offset {}: {}", addr_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "    🔍 Querying external code for address: 0x{}",
-        hex::encode(&address)
-    );
+    let address = memory.read_address(addr_offset_u32)?;
 
     // Query the external code using the ExternalCodeProvider trait
     match evmhost.external_code_copy(&address) {
         Some(external_code) => {
-            host_info!(
-                "    📄 Retrieved external code: {} bytes",
-                external_code.len()
-            );
-
             let mut buffer = vec![0u8; length_u32 as usize];
 
             // Copy from external code with bounds checking
@@ -343,51 +236,17 @@ where
                 buffer[..copy_len].copy_from_slice(
                     &external_code[code_offset_usize..code_offset_usize + copy_len],
                 );
-                host_info!("    📋 Copied {} bytes from external code", copy_len);
-            } else {
-                host_info!("    📋 No bytes copied (offset beyond code length)");
             }
 
             // Write the copied data to memory
-            memory
-                .write_bytes(result_offset_u32, &buffer)
-                .map_err(|e| {
-                    host_error!(
-                        "Failed to write external code to memory at offset {}: {}",
-                        result_offset,
-                        e
-                    );
-                    e
-                })?;
+            memory.write_bytes(result_offset_u32, &buffer)?;
 
-            host_info!(
-                "external_code_copy completed: copied {} bytes from external code offset {} to memory offset {}",
-                copy_len,
-                code_offset,
-                result_offset
-            );
             Ok(())
         }
         None => {
-            host_info!("    ❌ External contract not found, writing zeros");
-
             // Write zeros for non-existent contracts
             let buffer = vec![0u8; length_u32 as usize];
-            memory
-                .write_bytes(result_offset_u32, &buffer)
-                .map_err(|e| {
-                    host_error!(
-                        "Failed to write zeros to memory at offset {}: {}",
-                        result_offset,
-                        e
-                    );
-                    e
-                })?;
-
-            host_info!(
-                "external_code_copy completed: wrote {} zero bytes for non-existent contract",
-                length_u32
-            );
+            memory.write_bytes(result_offset_u32, &buffer)?;
             Ok(())
         }
     }

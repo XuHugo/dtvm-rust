@@ -6,8 +6,7 @@
 use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::{EvmHost, LogEvent};
-use crate::evm::utils::{format_hex, validate_bytes32_param, validate_data_param, MemoryAccessor};
-use crate::{host_error, host_info};
+use crate::evm::utils::{validate_bytes32_param, validate_data_param, MemoryAccessor};
 
 /// Emit a log event (LOG0, LOG1, LOG2, LOG3, LOG4 opcodes)
 /// Creates a log entry with the specified data and topics
@@ -34,17 +33,6 @@ pub fn emit_log_event<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "emit_log_event called: data_offset={}, length={}, num_topics={}, topics=[{}, {}, {}, {}]",
-        data_offset,
-        length,
-        num_topics,
-        topic1_offset,
-        topic2_offset,
-        topic3_offset,
-        topic4_offset
-    );
-
     let memory = MemoryAccessor::new(instance);
     let evmhost = &instance.extra_ctx;
 
@@ -61,17 +49,7 @@ where
     let (data_offset_u32, length_u32) = validate_data_param(instance, data_offset, length)?;
 
     // Read the log data
-    let log_data = memory
-        .read_bytes_vec(data_offset_u32, length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read log data at offset {} length {}: {}",
-                data_offset,
-                length,
-                e
-            );
-            e
-        })?;
+    let log_data = memory.read_bytes_vec(data_offset_u32, length_u32)?;
 
     // Read topics based on num_topics
     let mut topics = Vec::new();
@@ -84,15 +62,7 @@ where
             let topic_offset_u32 = validate_bytes32_param(instance, topic_offset)?;
 
             // Read the topic
-            let topic = memory.read_bytes32(topic_offset_u32).map_err(|e| {
-                host_error!(
-                    "Failed to read topic {} at offset {}: {}",
-                    i + 1,
-                    topic_offset,
-                    e
-                );
-                e
-            })?;
+            let topic = memory.read_bytes32(topic_offset_u32)?;
 
             topics.push(topic);
         } else {
@@ -113,28 +83,6 @@ where
 
     // Store the event in the evmhost (this is the key addition!)
     evmhost.emit_log_event(log_event);
-
-    // Display the log event for debugging
-    host_info!("=== LOG EVENT EMITTED ===");
-    host_info!("Contract Address: 0x{}", hex::encode(&contract_address));
-    host_info!(
-        "Data ({} bytes): 0x{}",
-        log_data.len(),
-        format_hex(&log_data)
-    );
-    host_info!("Number of Topics: {}", num_topics);
-
-    for (i, topic) in topics.iter().enumerate() {
-        host_info!("Topic {}: 0x{}", i + 1, format_hex(topic));
-    }
-
-    host_info!("========================");
-
-    host_info!(
-        "emit_log_event completed: emitted log with {} bytes of data and {} topics",
-        log_data.len(),
-        num_topics
-    );
 
     Ok(())
 }

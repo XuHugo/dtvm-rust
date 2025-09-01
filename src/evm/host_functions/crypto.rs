@@ -46,8 +46,7 @@
 use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
-use crate::evm::utils::{format_hex, validate_bytes32_param, validate_data_param, MemoryAccessor};
-use crate::{host_error, host_info};
+use crate::evm::utils::{validate_bytes32_param, validate_data_param, MemoryAccessor};
 
 /// SHA256 hash function implementation
 /// Computes the SHA256 hash of the input data and writes it to the result location
@@ -69,13 +68,6 @@ pub fn sha256<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "sha256 called: input_offset={}, input_length={}, result_offset={}",
-        input_offset,
-        input_length,
-        result_offset
-    );
-
     let memory = MemoryAccessor::new(instance);
 
     // Validate parameters
@@ -84,42 +76,14 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read input data
-    let input_data = memory
-        .read_bytes_vec(input_offset_u32, input_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read input data at offset {} length {}: {}",
-                input_offset,
-                input_length,
-                e
-            );
-            e
-        })?;
-
-    host_info!("sha256 input data: 0x{}", format_hex(&input_data));
+    let input_data = memory.read_bytes_vec(input_offset_u32, input_length_u32)?;
 
     let evmhost = &instance.extra_ctx;
     let hash_bytes: [u8; 32] = evmhost.sha256(input_data);
 
-    host_info!("sha256 result: 0x{}", format_hex(&hash_bytes));
-
     // Write the hash to memory
-    memory
-        .write_bytes32(result_offset_u32, &hash_bytes)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write SHA256 hash at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes32(result_offset_u32, &hash_bytes)?;
 
-    host_info!(
-        "sha256 completed: processed {} bytes, hash written to offset {}",
-        input_length,
-        result_offset
-    );
     Ok(())
 }
 
@@ -144,13 +108,6 @@ pub fn keccak256<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "keccak256 called: input_offset={}, input_length={}, result_offset={}",
-        input_offset,
-        input_length,
-        result_offset
-    );
-
     let memory = MemoryAccessor::new(instance);
 
     // Validate parameters
@@ -159,43 +116,15 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read input data
-    let input_data = memory
-        .read_bytes_vec(input_offset_u32, input_length_u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read input data at offset {} length {}: {}",
-                input_offset,
-                input_length,
-                e
-            );
-            e
-        })?;
-
-    host_info!("keccak256 input data: 0x{}", format_hex(&input_data));
+    let input_data = memory.read_bytes_vec(input_offset_u32, input_length_u32)?;
 
     // Compute Keccak256 hash using the sha3 crate
     let evmhost = &instance.extra_ctx;
     let hash_bytes: [u8; 32] = evmhost.keccak256(input_data);
 
-    host_info!("keccak256 result: 0x{}", format_hex(&hash_bytes));
-
     // Write the hash to memory
-    memory
-        .write_bytes32(result_offset_u32, &hash_bytes)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write Keccak256 hash at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes32(result_offset_u32, &hash_bytes)?;
 
-    host_info!(
-        "keccak256 completed: processed {} bytes, hash written to offset {}",
-        input_length,
-        result_offset
-    );
     Ok(())
 }
 

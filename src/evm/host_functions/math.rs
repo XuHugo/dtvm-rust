@@ -6,8 +6,7 @@
 use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
-use crate::evm::utils::{format_hex, validate_bytes32_param, MemoryAccessor};
-use crate::{host_error, host_info};
+use crate::evm::utils::{validate_bytes32_param, MemoryAccessor};
 
 /// Modular addition: (a + b) % n
 /// Computes the modular addition of two 256-bit numbers
@@ -28,14 +27,6 @@ pub fn addmod<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "addmod called: a_offset={}, b_offset={}, n_offset={}, result_offset={}",
-        a_offset,
-        b_offset,
-        n_offset,
-        result_offset
-    );
-
     let memory = MemoryAccessor::new(instance);
 
     // Validate all parameters
@@ -45,49 +36,18 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read operands
-    let a_bytes = memory.read_bytes32(a_offset_u32).map_err(|e| {
-        host_error!("Failed to read operand A at offset {}: {}", a_offset, e);
-        e
-    })?;
+    let a_bytes = memory.read_bytes32(a_offset_u32)?;
 
-    let b_bytes = memory.read_bytes32(b_offset_u32).map_err(|e| {
-        host_error!("Failed to read operand B at offset {}: {}", b_offset, e);
-        e
-    })?;
+    let b_bytes = memory.read_bytes32(b_offset_u32)?;
 
-    let n_bytes = memory.read_bytes32(n_offset_u32).map_err(|e| {
-        host_error!("Failed to read modulus N at offset {}: {}", n_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "addmod operands: a=0x{}, b=0x{}, n=0x{}",
-        format_hex(&a_bytes),
-        format_hex(&b_bytes),
-        format_hex(&n_bytes)
-    );
+    let n_bytes = memory.read_bytes32(n_offset_u32)?;
 
     let evmhost = &instance.extra_ctx;
     let result_bytes: [u8; 32] = evmhost.addmod(a_bytes, b_bytes, n_bytes);
 
-    host_info!("addmod result: 0x{}", format_hex(&result_bytes));
-
     // Write the result to memory
-    memory
-        .write_bytes32(result_offset_u32, &result_bytes)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write addmod result at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes32(result_offset_u32, &result_bytes)?;
 
-    host_info!(
-        "addmod completed: result written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -110,14 +70,6 @@ pub fn mulmod<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "mulmod called: a_offset={}, b_offset={}, n_offset={}, result_offset={}",
-        a_offset,
-        b_offset,
-        n_offset,
-        result_offset
-    );
-
     let memory = MemoryAccessor::new(instance);
 
     // Validate all parameters
@@ -127,49 +79,18 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read operands
-    let a_bytes = memory.read_bytes32(a_offset_u32).map_err(|e| {
-        host_error!("Failed to read operand A at offset {}: {}", a_offset, e);
-        e
-    })?;
+    let a_bytes = memory.read_bytes32(a_offset_u32)?;
 
-    let b_bytes = memory.read_bytes32(b_offset_u32).map_err(|e| {
-        host_error!("Failed to read operand B at offset {}: {}", b_offset, e);
-        e
-    })?;
+    let b_bytes = memory.read_bytes32(b_offset_u32)?;
 
-    let n_bytes = memory.read_bytes32(n_offset_u32).map_err(|e| {
-        host_error!("Failed to read modulus N at offset {}: {}", n_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "mulmod operands: a=0x{}, b=0x{}, n=0x{}",
-        format_hex(&a_bytes),
-        format_hex(&b_bytes),
-        format_hex(&n_bytes)
-    );
+    let n_bytes = memory.read_bytes32(n_offset_u32)?;
 
     let evmhost = &instance.extra_ctx;
     let result_bytes: [u8; 32] = evmhost.mulmod(a_bytes, b_bytes, n_bytes);
 
-    host_info!("mulmod result: 0x{}", format_hex(&result_bytes));
-
     // Write the result to memory
-    memory
-        .write_bytes32(result_offset_u32, &result_bytes)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write mulmod result at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes32(result_offset_u32, &result_bytes)?;
 
-    host_info!(
-        "mulmod completed: result written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -192,14 +113,6 @@ pub fn expmod<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "expmod called: base_offset={}, exp_offset={}, mod_offset={}, result_offset={}",
-        base_offset,
-        exp_offset,
-        mod_offset,
-        result_offset
-    );
-
     let memory = MemoryAccessor::new(instance);
 
     // Validate all parameters
@@ -209,49 +122,18 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read operands
-    let base_bytes = memory.read_bytes32(base_offset_u32).map_err(|e| {
-        host_error!("Failed to read base at offset {}: {}", base_offset, e);
-        e
-    })?;
+    let base_bytes = memory.read_bytes32(base_offset_u32)?;
 
-    let exp_bytes = memory.read_bytes32(exp_offset_u32).map_err(|e| {
-        host_error!("Failed to read exponent at offset {}: {}", exp_offset, e);
-        e
-    })?;
+    let exp_bytes = memory.read_bytes32(exp_offset_u32)?;
 
-    let mod_bytes = memory.read_bytes32(mod_offset_u32).map_err(|e| {
-        host_error!("Failed to read modulus at offset {}: {}", mod_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "expmod operands: base=0x{}, exp=0x{}, mod=0x{}",
-        format_hex(&base_bytes),
-        format_hex(&exp_bytes),
-        format_hex(&mod_bytes)
-    );
+    let mod_bytes = memory.read_bytes32(mod_offset_u32)?;
 
     let evmhost = &instance.extra_ctx;
     let result_bytes: [u8; 32] = evmhost.expmod(base_bytes, exp_bytes, mod_bytes);
 
-    host_info!("expmod result: 0x{}", format_hex(&result_bytes));
-
     // Write the result to memory
-    memory
-        .write_bytes32(result_offset_u32, &result_bytes)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write expmod result at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes32(result_offset_u32, &result_bytes)?;
 
-    host_info!(
-        "expmod completed: result written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 

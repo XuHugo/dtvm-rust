@@ -11,10 +11,8 @@ pub mod host_functions;
 pub mod traits;
 pub mod utils;
 
-
-
 // Re-export main types for convenience
 pub use error::{HostFunctionError, HostFunctionResult};
 pub use host_functions::*;
 pub use traits::*;
-pub use utils::{format_hex, init_logging, MemoryAccessor};
+pub use utils::MemoryAccessor;

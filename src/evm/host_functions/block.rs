@@ -67,7 +67,6 @@ use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
 use crate::evm::utils::{validate_address_param, validate_bytes32_param, MemoryAccessor};
-use crate::{host_error, host_info};
 
 /// Get the current block number
 /// Returns the block number as i64
@@ -78,7 +77,6 @@ where
     let evmhost = &instance.extra_ctx;
     let block_number = evmhost.get_block_number();
 
-    host_info!("get_block_number called, returning: {}", block_number);
     block_number
 }
 
@@ -91,7 +89,6 @@ where
     let evmhost = &instance.extra_ctx;
     let timestamp = evmhost.get_block_timestamp();
 
-    host_info!("get_block_timestamp called, returning: {}", timestamp);
     timestamp
 }
 
@@ -104,7 +101,6 @@ where
     let evmhost = &instance.extra_ctx;
     let gas_limit = evmhost.get_block_gas_limit();
 
-    host_info!("get_block_gas_limit called, returning: {}", gas_limit);
     gas_limit
 }
 
@@ -121,8 +117,6 @@ pub fn get_block_coinbase<T>(
 where
     T: EvmHost,
 {
-    host_info!("get_block_coinbase called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -133,19 +127,8 @@ where
     let coinbase = evmhost.get_block_coinbase();
 
     // Write the address to memory
-    memory.write_address(offset, coinbase).map_err(|e| {
-        host_error!(
-            "Failed to write coinbase address at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_address(offset, coinbase)?;
 
-    host_info!(
-        "get_block_coinbase completed: address written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -162,11 +145,6 @@ pub fn get_block_prev_randao<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "get_block_prev_randao called: result_offset={}",
-        result_offset
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -177,19 +155,8 @@ where
     let prev_randao = evmhost.get_block_prev_randao();
 
     // Write the value to memory
-    memory.write_bytes32(offset, prev_randao).map_err(|e| {
-        host_error!(
-            "Failed to write prev_randao at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_bytes32(offset, prev_randao)?;
 
-    host_info!(
-        "get_block_prev_randao completed: value written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -215,12 +182,6 @@ pub fn get_block_hash<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "get_block_hash called: block_num={}, result_offset={}",
-        block_num,
-        result_offset
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -231,68 +192,26 @@ where
 
     // Basic validation: block number should be non-negative and less than current block
     if block_num < 0 || block_num >= current_block {
-        host_info!(
-            "get_block_hash: invalid block number {} (current: {})",
-            block_num,
-            current_block
-        );
-
         // Write zero hash for invalid block numbers
         let zero_hash = [0u8; 32];
-        memory.write_bytes32(offset, &zero_hash).map_err(|e| {
-            host_error!(
-                "Failed to write zero hash at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+        memory.write_bytes32(offset, &zero_hash)?;
 
         return Ok(0); // Block not found
     }
 
-    host_info!("    🔍 Querying block hash for block number: {}", block_num);
-
     // Query the block hash using the BlockHashProvider trait
     match evmhost.get_block_hash(block_num) {
         Some(hash) => {
-            host_info!("    📦 Retrieved block hash: 0x{}", hex::encode(&hash));
-
             // Write the hash to memory
-            memory.write_bytes32(offset, &hash).map_err(|e| {
-                host_error!(
-                    "Failed to write block hash at offset {}: {}",
-                    result_offset,
-                    e
-                );
-                e
-            })?;
+            memory.write_bytes32(offset, &hash)?;
 
-            host_info!(
-                "get_block_hash completed: hash for block {} written to offset {}",
-                block_num,
-                result_offset
-            );
             Ok(1) // Success
         }
         None => {
-            host_info!("    ❌ Block hash not found for block {}", block_num);
-
             // Write zero hash when block is not found or too old
             let zero_hash = [0u8; 32];
-            memory.write_bytes32(offset, &zero_hash).map_err(|e| {
-                host_error!(
-                    "Failed to write zero hash at offset {}: {}",
-                    result_offset,
-                    e
-                );
-                e
-            })?;
+            memory.write_bytes32(offset, &zero_hash)?;
 
-            host_info!(
-                "get_block_hash completed: zero hash written for unavailable block {}",
-                block_num
-            );
             Ok(0) // Block not found
         }
     }

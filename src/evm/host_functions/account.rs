@@ -7,7 +7,6 @@ use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
 use crate::evm::utils::{validate_address_param, validate_bytes32_param, MemoryAccessor};
-use crate::{host_error, host_info};
 
 /// Get the current contract address
 /// Writes the 20-byte contract address to the specified memory location
@@ -19,8 +18,6 @@ pub fn get_address<T>(instance: &ZenInstance<T>, result_offset: i32) -> HostFunc
 where
     T: EvmHost,
 {
-    host_info!("get_address called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -31,19 +28,7 @@ where
     let address = evmhost.get_address();
 
     // Write the address to memory
-    memory.write_address(offset, address).map_err(|e| {
-        host_error!(
-            "Failed to write contract address at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
-
-    host_info!(
-        "get_address completed: address written to offset {}",
-        result_offset
-    );
+    memory.write_address(offset, address)?;
     Ok(())
 }
 
@@ -57,8 +42,6 @@ pub fn get_caller<T>(instance: &ZenInstance<T>, result_offset: i32) -> HostFunct
 where
     T: EvmHost,
 {
-    host_info!("get_caller called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -69,19 +52,8 @@ where
     let caller = evmhost.get_caller();
 
     // Write the address to memory
-    memory.write_address(offset, caller).map_err(|e| {
-        host_error!(
-            "Failed to write caller address at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_address(offset, caller)?;
 
-    host_info!(
-        "get_caller completed: address written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -95,8 +67,6 @@ pub fn get_tx_origin<T>(instance: &ZenInstance<T>, result_offset: i32) -> HostFu
 where
     T: EvmHost,
 {
-    host_info!("get_tx_origin called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -107,19 +77,8 @@ where
     let origin = evmhost.get_tx_origin();
 
     // Write the address to memory
-    memory.write_address(offset, origin).map_err(|e| {
-        host_error!(
-            "Failed to write tx origin address at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_address(offset, origin)?;
 
-    host_info!(
-        "get_tx_origin completed: address written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -133,8 +92,6 @@ pub fn get_call_value<T>(instance: &ZenInstance<T>, result_offset: i32) -> HostF
 where
     T: EvmHost,
 {
-    host_info!("get_call_value called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -145,19 +102,8 @@ where
     let call_value = evmhost.get_call_value();
 
     // Write the value to memory
-    memory.write_bytes32(offset, call_value).map_err(|e| {
-        host_error!(
-            "Failed to write call value at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_bytes32(offset, call_value)?;
 
-    host_info!(
-        "get_call_value completed: value written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -171,8 +117,6 @@ pub fn get_chain_id<T>(instance: &ZenInstance<T>, result_offset: i32) -> HostFun
 where
     T: EvmHost,
 {
-    host_info!("get_chain_id called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -183,19 +127,8 @@ where
     let chain_id = evmhost.get_chain_id();
 
     // Write the chain ID to memory
-    memory.write_bytes32(offset, chain_id).map_err(|e| {
-        host_error!(
-            "Failed to write chain ID at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_bytes32(offset, chain_id)?;
 
-    host_info!(
-        "get_chain_id completed: chain ID written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -217,12 +150,6 @@ pub fn get_external_balance<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "get_external_balance called: addr_offset={}, result_offset={}",
-        addr_offset,
-        result_offset
-    );
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -231,32 +158,12 @@ where
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read the address to query
-    let address = memory.read_address(addr_offset_u32).map_err(|e| {
-        host_error!("Failed to read address at offset {}: {}", addr_offset, e);
-        e
-    })?;
-
-    host_info!(
-        "    🔍 Querying balance for address: 0x{}",
-        hex::encode(&address)
-    );
+    let address = memory.read_address(addr_offset_u32)?;
 
     // Query the balance using the AccountBalanceProvider trait
     let balance = evmhost.get_external_balance(&address);
 
-    host_info!("    💰 Retrieved balance: 0x{}", hex::encode(&balance));
-
     // Write the balance to memory
-    memory
-        .write_bytes32(result_offset_u32, &balance)
-        .map_err(|e| {
-            host_error!("Failed to write balance at offset {}: {}", result_offset, e);
-            e
-        })?;
-
-    host_info!(
-        "get_external_balance completed: balance written to offset {}",
-        result_offset
-    );
+    memory.write_bytes32(result_offset_u32, &balance)?;
     Ok(())
 }

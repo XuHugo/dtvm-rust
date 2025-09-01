@@ -40,7 +40,6 @@ use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
 use crate::evm::utils::MemoryAccessor;
-use crate::{host_error, host_info};
 
 /// Storage store host function implementation
 /// Stores a 32-byte value at a 32-byte key in contract storage
@@ -57,46 +56,19 @@ pub fn storage_store<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "storage_store called: key_offset={}, value_offset={}",
-        key_bytes_offset,
-        value_bytes_offset
-    );
-
     // Get the Mockevmhost from the instance
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
     // Validate and read the storage key (32 bytes)
-    let key_bytes = memory.read_bytes32(key_bytes_offset as u32).map_err(|e| {
-        host_error!(
-            "Failed to read storage key at offset {}: {}",
-            key_bytes_offset,
-            e
-        );
-        e
-    })?;
+    let key_bytes = memory.read_bytes32(key_bytes_offset as u32)?;
 
     // Validate and read the storage value (32 bytes)
-    let value_bytes = memory
-        .read_bytes32(value_bytes_offset as u32)
-        .map_err(|e| {
-            host_error!(
-                "Failed to read storage value at offset {}: {}",
-                value_bytes_offset,
-                e
-            );
-            e
-        })?;
+    let value_bytes = memory.read_bytes32(value_bytes_offset as u32)?;
 
     // Store the value in the evmhost using EVMC-compatible method
     evmhost.storage_store(&key_bytes, &value_bytes);
 
-    host_info!("    📦 Stored value: 0x{}", hex::encode(&value_bytes));
-    host_info!(
-        "Storage store completed: key=0x{}, value_len=32",
-        hex::encode(&key_bytes)
-    );
     Ok(())
 }
 
@@ -115,46 +87,18 @@ pub fn storage_load<T>(
 where
     T: EvmHost,
 {
-    host_info!(
-        "storage_load called: key_offset={}, result_offset={}",
-        key_bytes_offset,
-        result_offset
-    );
-
     // Get the Mockevmhost from the instance
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
     // Validate and read the storage key (32 bytes)
-    let key_bytes = memory.read_bytes32(key_bytes_offset as u32).map_err(|e| {
-        host_error!(
-            "Failed to read storage key at offset {}: {}",
-            key_bytes_offset,
-            e
-        );
-        e
-    })?;
+    let key_bytes = memory.read_bytes32(key_bytes_offset as u32)?;
 
     // Load the value from storage using EVMC-compatible method
     let value_bytes = evmhost.storage_load(&key_bytes);
 
-    host_info!("    📤 Loaded value: 0x{}", hex::encode(&value_bytes));
-
     // Write the result to memory
-    memory
-        .write_bytes32(result_offset as u32, &value_bytes)
-        .map_err(|e| {
-            host_error!(
-                "Failed to write storage result at offset {}: {}",
-                result_offset,
-                e
-            );
-            e
-        })?;
+    memory.write_bytes32(result_offset as u32, &value_bytes)?;
 
-    host_info!(
-        "Storage load completed: key=0x{}, value_len=32",
-        hex::encode(&key_bytes)
-    );
     Ok(())
 }

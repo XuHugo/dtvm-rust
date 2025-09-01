@@ -10,7 +10,6 @@ use crate::core::instance::ZenInstance;
 use crate::evm::error::HostFunctionResult;
 use crate::evm::traits::EvmHost;
 use crate::evm::utils::{validate_bytes32_param, MemoryAccessor};
-use crate::{host_error, host_info};
 
 /// Get the current block's base fee
 /// Writes the 32-byte base fee to the specified memory location
@@ -22,8 +21,6 @@ pub fn get_base_fee<T>(instance: &ZenInstance<T>, result_offset: i32) -> HostFun
 where
     T: EvmHost,
 {
-    host_info!("get_base_fee called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -34,19 +31,8 @@ where
     let base_fee = evmhost.get_base_fee();
 
     // Write the base fee to memory
-    memory.write_bytes32(offset, base_fee).map_err(|e| {
-        host_error!(
-            "Failed to write base fee at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_bytes32(offset, base_fee)?;
 
-    host_info!(
-        "get_base_fee completed: base fee written to offset {}",
-        result_offset
-    );
     Ok(())
 }
 
@@ -60,8 +46,6 @@ pub fn get_blob_base_fee<T>(instance: &ZenInstance<T>, result_offset: i32) -> Ho
 where
     T: EvmHost,
 {
-    host_info!("get_blob_base_fee called: result_offset={}", result_offset);
-
     let evmhost = &instance.extra_ctx;
     let memory = MemoryAccessor::new(instance);
 
@@ -72,18 +56,7 @@ where
     let blob_base_fee = evmhost.get_blob_base_fee();
 
     // Write the blob base fee to memory
-    memory.write_bytes32(offset, blob_base_fee).map_err(|e| {
-        host_error!(
-            "Failed to write blob base fee at offset {}: {}",
-            result_offset,
-            e
-        );
-        e
-    })?;
+    memory.write_bytes32(offset, blob_base_fee)?;
 
-    host_info!(
-        "get_blob_base_fee completed: blob base fee written to offset {}",
-        result_offset
-    );
     Ok(())
 }
