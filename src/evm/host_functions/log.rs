@@ -46,7 +46,7 @@ where
     }
 
     // Validate data parameters
-    let (data_offset_u32, length_u32) = validate_data_param(instance, data_offset, length)?;
+    let (data_offset_u32, length_u32) = validate_data_param(instance, data_offset, length, Some("emit_log_event"))?;
 
     // Read the log data
     let log_data = memory.read_bytes_vec(data_offset_u32, length_u32)?;

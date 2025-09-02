@@ -72,7 +72,7 @@ where
 
     // Validate parameters
     let (input_offset_u32, input_length_u32) =
-        validate_data_param(instance, input_offset, input_length)?;
+        validate_data_param(instance, input_offset, input_length, Some("sha256"))?;
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read input data
@@ -112,7 +112,7 @@ where
 
     // Validate parameters
     let (input_offset_u32, input_length_u32) =
-        validate_data_param(instance, input_offset, input_length)?;
+        validate_data_param(instance, input_offset, input_length, Some("keccak256"))?;
     let result_offset_u32 = validate_bytes32_param(instance, result_offset)?;
 
     // Read input data
@@ -128,59 +128,8 @@ where
     Ok(())
 }
 
-/// Helper function to validate hash function parameters
-#[allow(dead_code)]
-fn validate_hash_params(
-    input_offset: i32,
-    input_length: i32,
-    result_offset: i32,
-) -> HostFunctionResult<()> {
-    if input_offset < 0 {
-        return Err(crate::evm::error::out_of_bounds_error(
-            input_offset as u32,
-            input_length as u32,
-            "negative input offset",
-        ));
-    }
-
-    if input_length < 0 {
-        return Err(crate::evm::error::out_of_bounds_error(
-            input_offset as u32,
-            input_length as u32,
-            "negative input length",
-        ));
-    }
-
-    if result_offset < 0 {
-        return Err(crate::evm::error::out_of_bounds_error(
-            result_offset as u32,
-            32,
-            "negative result offset",
-        ));
-    }
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    // Note: These tests would require a proper ZenInstance setup
-    // For now, they serve as documentation of expected behavior
-
-    #[test]
-    fn test_validate_hash_params() {
-        // Valid parameters
-        assert!(validate_hash_params(0, 10, 32).is_ok());
-        assert!(validate_hash_params(100, 0, 200).is_ok()); // Zero length is valid
-
-        // Invalid parameters
-        assert!(validate_hash_params(-1, 10, 32).is_err());
-        assert!(validate_hash_params(0, -1, 32).is_err());
-        assert!(validate_hash_params(0, 10, -1).is_err());
-    }
-
     #[test]
     fn test_sha256_known_vectors() {
         // Test SHA256 with known test vectors
