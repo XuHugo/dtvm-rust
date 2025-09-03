@@ -31,8 +31,6 @@ const ALLOWANCE_SELECTOR: [u8; 4] = [0xdd, 0x62, 0xed, 0x3e]; // allowance(addre
 
 #[test]
 fn test_simple_token_contract() {
-    init_test_env();
-
     // Load SimpleToken WASM module
     let token_wasm_bytes =
         load_wasm_file("../example/SimpleToken.wasm").expect("Failed to load SimpleToken.wasm");
@@ -50,7 +48,7 @@ fn test_simple_token_contract() {
         .build();
 
     // Create test addresses
-    let owner_address = create_test_address(1);
+    let owner_address = random_test_address(1);
 
     // Deploy contract
     // Set constructor parameter: initial supply = 1000000 tokens (1M * 10^18 wei)
@@ -110,7 +108,7 @@ fn test_token_name(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_balance_of(executor: &ContractExecutor, context: &mut MockContext) {
-    let owner_address = create_test_address(1);
+    let owner_address = random_test_address(1);
     set_function_call_data_with_address(context, &BALANCE_OF_SELECTOR, &owner_address);
 
     let result = executor
@@ -128,7 +126,7 @@ fn test_balance_of(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_mint(executor: &ContractExecutor, context: &mut MockContext) {
-    let recipient_address = create_test_address(2);
+    let recipient_address = random_test_address(2);
     set_function_call_data_with_address_and_amount(
         context,
         &MINT_SELECTOR,
@@ -159,7 +157,7 @@ fn test_mint(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_transfer(executor: &ContractExecutor, context: &mut MockContext) {
-    let spender_address = create_test_address(3);
+    let spender_address = random_test_address(3);
     set_function_call_data_with_address_and_amount(
         context,
         &TRANSFER_SELECTOR,

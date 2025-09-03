@@ -16,8 +16,6 @@ use std::rc::Rc;
 
 #[test]
 fn test_contract_calls() {
-    init_test_env();
-
     // Load WASM modules
     let contract_calls_wasm =
         load_wasm_file("../example/ContractCalls.wasm").expect("Failed to load ContractCalls.wasm");
@@ -31,9 +29,9 @@ fn test_contract_calls() {
     let executor = ContractExecutor::new().expect("Failed to create contract executor");
 
     // Create test addresses
-    let owner_address = create_test_address(1);
-    let calls_contract_address = create_test_address(10);
-    let target_contract_address = create_test_address(20);
+    let owner_address = random_test_address(1);
+    let calls_contract_address = random_test_address(10);
+    let target_contract_address = random_test_address(20);
 
     // Create a shared contract registry and pre-register both contracts
     let shared_registry = Rc::new(RefCell::new(HashMap::new()));
@@ -137,7 +135,7 @@ fn test_delegate_call(executor: &ContractExecutor, context: &mut MockContext) {
 fn test_create(executor: &ContractExecutor, context: &mut MockContext) {
     // Prepare call data for testCreate(uint256 _value)
     let selector = calculate_selector("testCreate(uint256)");
-    set_function_call_data_with_uint256(context, &selector, 123);
+    set_call_data_with_uint256(context, &selector, 123);
 
     let result = executor
         .call_contract_function("ContractCalls.wasm", context)
@@ -149,7 +147,7 @@ fn test_create(executor: &ContractExecutor, context: &mut MockContext) {
     let count_value = decode_address(&result.return_data).unwrap();
     assert_eq!(
         count_value,
-        create_test_address(9),
+        random_test_address(9),
         "Address should be  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9], got {:?}",
         count_value
     );
@@ -169,7 +167,7 @@ fn test_create2(executor: &ContractExecutor, context: &mut MockContext) {
     let count_value = decode_address(&result.return_data).unwrap();
     assert_eq!(
         count_value,
-        create_test_address(99),
+        random_test_address(99),
         "Address should be  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 99], got {:?}",
         count_value
     );

@@ -28,12 +28,8 @@ pub fn calculate_selector(signature: &str) -> [u8; 4] {
     [hash[0], hash[1], hash[2], hash[3]]
 }
 
-pub fn init_test_env() {
-    env_logger::init();
-}
-
 /// Helper function to create a test address
-pub fn create_test_address(byte: u8) -> [u8; 20] {
+pub fn random_test_address(byte: u8) -> [u8; 20] {
     let mut addr = [0u8; 20];
     addr[19] = byte; // Set the last byte to distinguish addresses
     addr

@@ -29,8 +29,6 @@ const GET_SELF_CODE_SIZE_SELECTOR: [u8; 4] = [0xf7, 0x5, 0xc3, 0x68]; // getSelf
 
 #[test]
 fn test_advanced_host_functions() {
-    init_test_env();
-
     // Load AdvancedHostFunctions WASM module
     let advanced_wasm_bytes = load_wasm_file("../example/AdvancedHostFunctions.wasm")
         .expect("Failed to load AdvancedHostFunctions.wasm");
@@ -42,9 +40,9 @@ fn test_advanced_host_functions() {
     let executor = ContractExecutor::new().expect("Failed to create contract executor");
 
     // Create test addresses
-    let owner_address = create_test_address(1);
-    let contract_address = create_test_address(10);
-    let _target_address = create_test_address(20);
+    let owner_address = random_test_address(1);
+    let contract_address = random_test_address(10);
+    let _target_address = random_test_address(20);
 
     let mut context = MockContext::builder()
         .with_storage(shared_storage.clone())
@@ -93,7 +91,7 @@ fn test_code_copy(executor: &ContractExecutor, context: &mut MockContext) {
 fn test_external_balance(executor: &ContractExecutor, context: &mut MockContext) {
     let selector = calculate_selector("testExternalBalance(address)");
     println!("=== Testing testExternalBalance ==={:x?}", selector);
-    let target_address = create_test_address(20);
+    let target_address = random_test_address(20);
 
     set_function_call_data_with_address(context, &TEST_EXTERNAL_BALANCE_SELECTOR, &target_address);
 
@@ -113,7 +111,7 @@ fn test_external_balance(executor: &ContractExecutor, context: &mut MockContext)
 fn test_external_codesize(executor: &ContractExecutor, context: &mut MockContext) {
     let selector = calculate_selector("testExternalCodeSize(address)");
     println!("=== Testing testExternalCodeSize ==={:x?}", selector);
-    let target_address = create_test_address(20);
+    let target_address = random_test_address(20);
 
     set_function_call_data_with_address(
         context,
@@ -137,7 +135,7 @@ fn test_external_codesize(executor: &ContractExecutor, context: &mut MockContext
 fn test_external_codehash(executor: &ContractExecutor, context: &mut MockContext) {
     let selector = calculate_selector("testExternalCodeHash(address)");
     println!("=== Testing testExternalCodeHash ==={:x?}", selector);
-    let target_address = create_test_address(20);
+    let target_address = random_test_address(20);
 
     set_function_call_data_with_address(
         context,
@@ -163,7 +161,7 @@ fn test_external_codehash(executor: &ContractExecutor, context: &mut MockContext
 fn test_external_codecopy(executor: &ContractExecutor, context: &mut MockContext) {
     let selector = calculate_selector("testExternalCodeCopy(address,uint256,uint256)");
     println!("=== Testing testExternalCodeCopy ==={:x?}", selector);
-    let target_address = create_test_address(20);
+    let target_address = random_test_address(20);
 
     set_function_call_data_with_address_and_two_uint256(
         context,
@@ -242,7 +240,7 @@ fn test_self_codesize(executor: &ContractExecutor, context: &mut MockContext) {
 fn test_self_destruct(executor: &ContractExecutor, context: &mut MockContext) {
     let selector = calculate_selector("testSelfDestruct(address)");
     println!("=== Testing testSelfDestruct ==={:x?}", selector);
-    let target_address = create_test_address(20);
+    let target_address = random_test_address(20);
 
     set_function_call_data_with_address(context, &TEST_SELF_DESTRUCT_SELECTOR, &target_address);
 

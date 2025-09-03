@@ -13,6 +13,7 @@
 mod common;
 
 use common::*;
+use common::calldata::set_call_data_with_params;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -24,8 +25,6 @@ const DECREASE_SELECTOR: [u8; 4] = [0xd7, 0x32, 0xd9, 0x55]; // decrease()
 
 #[test]
 fn test_counter_contract() {
-    init_test_env();
-
     // Load counter WASM module
     let counter_wasm_bytes =
         load_wasm_file("../example/counter.wasm").expect("Failed to load counter.wasm");
@@ -55,7 +54,8 @@ fn test_counter_contract() {
 }
 
 fn test_initial_count(executor: &ContractExecutor, context: &mut MockContext) {
-    set_function_call_data(context, &COUNT_SELECTOR);
+    // Use new simplified API with no parameters
+    set_call_data_with_params(context, &COUNT_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("counter", context)
@@ -73,7 +73,8 @@ fn test_initial_count(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_increase_counter(executor: &ContractExecutor, context: &mut MockContext) {
-    set_function_call_data(context, &INCREASE_SELECTOR);
+    // Use new simplified API with no parameters
+    set_call_data_with_params(context, &INCREASE_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("counter", context)
@@ -82,7 +83,7 @@ fn test_increase_counter(executor: &ContractExecutor, context: &mut MockContext)
     assert!(result.success, "increase() should succeed");
 
     // Verify the count increased to 1
-    set_function_call_data(context, &COUNT_SELECTOR);
+    set_call_data_with_params(context, &COUNT_SELECTOR, vec![]);
     let count_result = executor
         .call_contract_function("counter", context)
         .expect("Failed to call count() after increase");
@@ -95,13 +96,14 @@ fn test_increase_counter(executor: &ContractExecutor, context: &mut MockContext)
     let count_value = decode_uint256(&count_result.return_data).unwrap();
     assert_eq!(
         count_value, 1,
-        "Initial count should be 0, got {}",
+        "Count should be 1 after increase, got {}",
         count_value
     );
 }
 
 fn test_decrease_counter(executor: &ContractExecutor, context: &mut MockContext) {
-    set_function_call_data(context, &DECREASE_SELECTOR);
+    // Use new simplified API with no parameters
+    set_call_data_with_params(context, &DECREASE_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("counter", context)
@@ -110,7 +112,7 @@ fn test_decrease_counter(executor: &ContractExecutor, context: &mut MockContext)
     assert!(result.success, "decrease() should succeed");
 
     // Verify the count decreased back to 0
-    set_function_call_data(context, &COUNT_SELECTOR);
+    set_call_data_with_params(context, &COUNT_SELECTOR, vec![]);
     let count_result = executor
         .call_contract_function("counter", context)
         .expect("Failed to call count() after decrease");
@@ -123,7 +125,7 @@ fn test_decrease_counter(executor: &ContractExecutor, context: &mut MockContext)
     let count_value = decode_uint256(&count_result.return_data).unwrap();
     assert_eq!(
         count_value, 0,
-        "Initial count should be 0, got {}",
+        "Count should be 0 after decrease, got {}",
         count_value
     );
 }

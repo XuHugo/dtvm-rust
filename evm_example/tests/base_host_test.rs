@@ -45,8 +45,6 @@ const GET_PREV_RANDAO_SELECTOR: [u8; 4] = [0xf4, 0xc3, 0xa9, 0xb8]; // getPrevRa
 
 #[test]
 fn test_base_info_contract() {
-    init_test_env();
-
     // Load BaseInfo WASM module
     let base_info_wasm_bytes = load_wasm_file("../example/BaseHostFunctions.wasm")
         .expect("Failed to load BaseHostFunctions.wasm");
@@ -58,8 +56,8 @@ fn test_base_info_contract() {
     let executor = ContractExecutor::new().expect("Failed to create contract executor");
 
     // Create test addresses
-    let owner_address = create_test_address(1);
-    let coinbase_address = create_test_address(99);
+    let owner_address = random_test_address(1);
+    let coinbase_address = random_test_address(99);
 
     // Set base fee (10 gwei)
     let mut base_fee = [0u8; 32];
@@ -74,7 +72,7 @@ fn test_base_info_contract() {
         .with_storage(shared_storage.clone())
         .with_code(base_info_wasm_bytes)
         .with_caller(owner_address)
-        .with_address(create_test_address(5)) // Contract address
+        .with_address(random_test_address(5)) // Contract address
         .with_block_number(12345)
         .with_block_timestamp(1640995200) // 2022-01-01 00:00:00 UTC
         .with_block_gas_limit(30000000)
@@ -126,7 +124,7 @@ fn test_address_info(executor: &ContractExecutor, context: &mut MockContext) {
     let count_value = decode_address(&result.return_data).unwrap();
     assert_eq!(
         count_value,
-        create_test_address(5),
+        random_test_address(5),
         "Address should be  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5], got {:?}",
         count_value
     );
@@ -194,7 +192,7 @@ fn test_coinbase(executor: &ContractExecutor, context: &mut MockContext) {
     let count_value = decode_address(&result.return_data).unwrap();
     assert_eq!(
         count_value,
-        create_test_address(99),
+        random_test_address(99),
         "Coinbase should be  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 99], got {:?}",
         count_value
     );
@@ -212,7 +210,7 @@ fn test_origin(executor: &ContractExecutor, context: &mut MockContext) {
     let count_value = decode_address(&result.return_data).unwrap();
     assert_eq!(
         count_value,
-        create_test_address(1),
+        random_test_address(1),
         "Origin should be  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], got {:?}",
         count_value
     );
@@ -320,7 +318,7 @@ fn test_prevdandao(executor: &ContractExecutor, context: &mut MockContext) {
 fn test_blockhash(executor: &ContractExecutor, context: &mut MockContext) {
     println!("=== Testing getblockHash ===");
     let block_number = 12344u64; // Previous block
-    set_function_call_data_with_uint256(context, &GET_HASH_INFO_SELECTOR, block_number);
+    set_call_data_with_uint256(context, &GET_HASH_INFO_SELECTOR, block_number);
 
     let result = executor
         .call_contract_function("base_info", context)

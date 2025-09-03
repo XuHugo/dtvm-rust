@@ -9,5 +9,5 @@ edition = "2021"
 dtvmcore_rust = { path = "../" }
 cty = "0.2.2"
 hex = "0.4"
-env_logger = "0.10"
 sha3 = "0.10"
+ethabi = "18.0"
