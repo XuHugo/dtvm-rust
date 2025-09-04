@@ -113,8 +113,7 @@ fn test_base_info_contract() {
 }
 
 fn test_address_info(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Address Info Functions ===");
-    set_function_call_data(context, &GET_ADDRESS_INFO_SELECTOR);
+    set_call_data_with_params(context, &GET_ADDRESS_INFO_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -131,8 +130,7 @@ fn test_address_info(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_block_num(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Block Info Functions ===");
-    set_function_call_data(context, &GET_BLOCK_NUM_SELECTOR);
+    set_call_data_with_params(context, &GET_BLOCK_NUM_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -148,8 +146,7 @@ fn test_block_num(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_timestamp(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Block Info Functions ===");
-    set_function_call_data(context, &GET_TIMESTAMP_SELECTOR);
+    set_call_data_with_params(context, &GET_TIMESTAMP_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -164,8 +161,7 @@ fn test_timestamp(executor: &ContractExecutor, context: &mut MockContext) {
     );
 }
 fn test_gas_limit(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Block Info Functions ===");
-    set_function_call_data(context, &GET_GAS_LIMIT_SELECTOR);
+    set_call_data_with_params(context, &GET_GAS_LIMIT_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -181,8 +177,7 @@ fn test_gas_limit(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_coinbase(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Address Info Functions ===");
-    set_function_call_data(context, &GET_COINBASE_SELECTOR);
+    set_call_data_with_params(context, &GET_COINBASE_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -199,8 +194,7 @@ fn test_coinbase(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_origin(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Address Info Functions ===");
-    set_function_call_data(context, &GET_ORIGIN_SELECTOR);
+    set_call_data_with_params(context, &GET_ORIGIN_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -217,8 +211,7 @@ fn test_origin(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_gas_price(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Block Info Functions ===");
-    set_function_call_data(context, &GET_GAS_PRICE_SELECTOR);
+    set_call_data_with_params(context, &GET_GAS_PRICE_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -234,8 +227,7 @@ fn test_gas_price(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_gas_left(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Block Info Functions ===");
-    set_function_call_data(context, &GET_GAS_LEFT_SELECTOR);
+    set_call_data_with_params(context, &GET_GAS_LEFT_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -251,8 +243,7 @@ fn test_gas_left(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_chain_info(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Chain Info Functions ===");
-    set_function_call_data(context, &GET_CHAIN_INFO_SELECTOR);
+    set_call_data_with_params(context, &GET_CHAIN_INFO_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -264,8 +255,7 @@ fn test_chain_info(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_base_fee(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Fee Info Functions ===");
-    set_function_call_data(context, &GET_BASE_FEE_SELECTOR);
+    set_call_data_with_params(context, &GET_BASE_FEE_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -281,8 +271,7 @@ fn test_base_fee(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_blob_base_fee(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Fee Info Functions ===");
-    set_function_call_data(context, &GET_BLOB_BASE_FEE_SELECTOR);
+    set_call_data_with_params(context, &GET_BLOB_BASE_FEE_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -298,8 +287,7 @@ fn test_blob_base_fee(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_prevdandao(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing getPrevRandao ===");
-    set_function_call_data(context, &GET_PREV_RANDAO_SELECTOR);
+    set_call_data_with_params(context, &GET_PREV_RANDAO_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -316,9 +304,9 @@ fn test_prevdandao(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_blockhash(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing getblockHash ===");
     let block_number = 12344u64; // Previous block
-    set_call_data_with_uint256(context, &GET_HASH_INFO_SELECTOR, block_number);
+    let params = ParamBuilder::new().uint256(block_number).build();
+    set_call_data_with_params(context, &GET_HASH_INFO_SELECTOR, params);
 
     let result = executor
         .call_contract_function("base_info", context)
@@ -335,9 +323,9 @@ fn test_blockhash(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_sha256_function(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing SHA256 Function ===");
     let test_data = b"Hello, DTVM!";
-    set_function_call_data_with_bytes(context, &TEST_SHA256_SELECTOR, test_data);
+    let params = ParamBuilder::new().bytes(test_data).build();
+    set_call_data_with_params(context, &TEST_SHA256_SELECTOR, params);
 
     let result = executor
         .call_contract_function("base_info", context)

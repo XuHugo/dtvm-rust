@@ -12,8 +12,8 @@
 
 mod common;
 
-use common::*;
 use common::calldata::set_call_data_with_params;
+use common::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -42,7 +42,6 @@ fn test_counter_contract() {
         .build();
 
     // Deploy contract
-    println!("=== Deploying Counter Contract ===");
     executor
         .deploy_contract("counter", &mut context)
         .expect("Failed to deploy contract");

@@ -10,6 +10,7 @@
 mod common;
 
 use common::*;
+use ethabi::encode;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -86,8 +87,25 @@ fn test_contract_calls() {
 }
 
 fn test_call(executor: &ContractExecutor, context: &mut MockContext) {
-    println!("=== Testing Contract-to-Contract Call ===");
-    set_function_call_data_with_call(context);
+    // Prepare call data for setValue(100) on the target contract
+    let target_call_data = {
+        let mut data = calculate_selector("setValue(uint256)").to_vec();
+        data.extend_from_slice(&encode(&ParamBuilder::new().uint256(100).build()));
+        data
+    };
+
+    // Use ParamBuilder for testCall(address, bytes)
+    let target_address = random_test_address(20);
+    let params = ParamBuilder::new()
+        .address(&target_address)
+        .bytes(&target_call_data)
+        .build();
+
+    set_call_data_with_params(
+        context,
+        &calculate_selector("testCall(address,bytes)"),
+        params,
+    );
 
     let result = executor
         .call_contract_function("ContractCalls.wasm", context)
@@ -101,7 +119,22 @@ fn test_call(executor: &ContractExecutor, context: &mut MockContext) {
     assert_eq!(bytes_data, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100], "return data should be [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100], got {:?}", bytes_data);
 }
 fn test_static_call(executor: &ContractExecutor, context: &mut MockContext) {
-    set_function_call_data_with_static_call(context);
+    //  call data for testStaticCall(address target, bytes data)
+    // Prepare call data for getValue() - no parameters needed
+    let target_call_data = calculate_selector("getValue()").to_vec();
+
+    // Use ParamBuilder for testStaticCall(address, bytes)
+    let target_address = random_test_address(20);
+    let params = ParamBuilder::new()
+        .address(&target_address)
+        .bytes(&target_call_data)
+        .build();
+
+    set_call_data_with_params(
+        context,
+        &calculate_selector("testStaticCall(address,bytes)"),
+        params,
+    );
 
     let result = executor
         .call_contract_function("ContractCalls.wasm", context)
@@ -115,7 +148,25 @@ fn test_static_call(executor: &ContractExecutor, context: &mut MockContext) {
     assert_eq!(bytes_data, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100], "return data should be [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100], got {:?}", bytes_data);
 }
 fn test_delegate_call(executor: &ContractExecutor, context: &mut MockContext) {
-    set_function_call_data_with_call(context);
+    // Prepare call data for setValue(100) on the target contract
+    let target_call_data = {
+        let mut data = calculate_selector("setValue(uint256)").to_vec();
+        data.extend_from_slice(&encode(&ParamBuilder::new().uint256(100).build()));
+        data
+    };
+
+    // Use ParamBuilder for testCall(address, bytes)
+    let target_address = random_test_address(20);
+    let params = ParamBuilder::new()
+        .address(&target_address)
+        .bytes(&target_call_data)
+        .build();
+
+    set_call_data_with_params(
+        context,
+        &calculate_selector("testCall(address,bytes)"),
+        params,
+    );
 
     let result = executor
         .call_contract_function("ContractCalls.wasm", context)
@@ -135,7 +186,8 @@ fn test_delegate_call(executor: &ContractExecutor, context: &mut MockContext) {
 fn test_create(executor: &ContractExecutor, context: &mut MockContext) {
     // Prepare call data for testCreate(uint256 _value)
     let selector = calculate_selector("testCreate(uint256)");
-    set_call_data_with_uint256(context, &selector, 123);
+    let params = ParamBuilder::new().uint256(123).build();
+    set_call_data_with_params(context, &selector, params);
 
     let result = executor
         .call_contract_function("ContractCalls.wasm", context)
@@ -155,7 +207,20 @@ fn test_create(executor: &ContractExecutor, context: &mut MockContext) {
 
 fn test_create2(executor: &ContractExecutor, context: &mut MockContext) {
     // Prepare call data for testCreate2(uint256 _value, bytes32 salt)
-    set_function_call_data_with_create2(context);
+    let salt = [
+        0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+        0x07, 0x08,
+    ];
+
+    // Use ParamBuilder for testCreate2(uint256, bytes32)
+    let params = ParamBuilder::new().uint256(456).fixed_bytes(&salt).build();
+
+    set_call_data_with_params(
+        context,
+        &calculate_selector("testCreate2(uint256,bytes32)"),
+        params,
+    );
 
     let result = executor
         .call_contract_function("ContractCalls.wasm", context)

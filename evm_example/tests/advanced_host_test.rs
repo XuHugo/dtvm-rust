@@ -70,10 +70,7 @@ fn test_advanced_host_functions() {
 }
 
 fn test_code_copy(executor: &ContractExecutor, context: &mut MockContext) {
-    let selector = calculate_selector("testCodeCopy()");
-    println!("=== Testing testCodeCopy ==={:x?}", selector);
-
-    set_function_call_data(context, &TEST_CODE_COPY_SELECTOR);
+    set_call_data_with_params(context, &TEST_CODE_COPY_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -92,8 +89,8 @@ fn test_external_balance(executor: &ContractExecutor, context: &mut MockContext)
     let selector = calculate_selector("testExternalBalance(address)");
     println!("=== Testing testExternalBalance ==={:x?}", selector);
     let target_address = random_test_address(20);
-
-    set_function_call_data_with_address(context, &TEST_EXTERNAL_BALANCE_SELECTOR, &target_address);
+    let params = ParamBuilder::new().address(&target_address).build();
+    set_call_data_with_params(context, &TEST_EXTERNAL_BALANCE_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -112,12 +109,8 @@ fn test_external_codesize(executor: &ContractExecutor, context: &mut MockContext
     let selector = calculate_selector("testExternalCodeSize(address)");
     println!("=== Testing testExternalCodeSize ==={:x?}", selector);
     let target_address = random_test_address(20);
-
-    set_function_call_data_with_address(
-        context,
-        &TEST_EXTERNAL_CODE_SIZE_SELECTOR,
-        &target_address,
-    );
+    let params = ParamBuilder::new().address(&target_address).build();
+    set_call_data_with_params(context, &TEST_EXTERNAL_CODE_SIZE_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -136,12 +129,8 @@ fn test_external_codehash(executor: &ContractExecutor, context: &mut MockContext
     let selector = calculate_selector("testExternalCodeHash(address)");
     println!("=== Testing testExternalCodeHash ==={:x?}", selector);
     let target_address = random_test_address(20);
-
-    set_function_call_data_with_address(
-        context,
-        &TEST_EXTERNAL_CODE_HASH_SELECTOR,
-        &target_address,
-    );
+    let params = ParamBuilder::new().address(&target_address).build();
+    set_call_data_with_params(context, &TEST_EXTERNAL_CODE_HASH_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -162,14 +151,12 @@ fn test_external_codecopy(executor: &ContractExecutor, context: &mut MockContext
     let selector = calculate_selector("testExternalCodeCopy(address,uint256,uint256)");
     println!("=== Testing testExternalCodeCopy ==={:x?}", selector);
     let target_address = random_test_address(20);
-
-    set_function_call_data_with_address_and_two_uint256(
-        context,
-        &selector,
-        &target_address,
-        0,
-        100,
-    );
+    let params = ParamBuilder::new()
+        .address(&target_address)
+        .uint256(0)
+        .uint256(100)
+        .build();
+    set_call_data_with_params(context, &selector, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -186,10 +173,12 @@ fn test_external_codecopy(executor: &ContractExecutor, context: &mut MockContext
 }
 
 fn test_add_mod(executor: &ContractExecutor, context: &mut MockContext) {
-    let selector = calculate_selector("testAddMod(uint256,uint256,uint256)");
-    println!("=== Testing testAddMod ==={:x?}", selector);
-
-    set_function_call_data_with_three_uint256(context, &TEST_ADD_MOD_SELECTOR, 123, 456, 789);
+    let params = ParamBuilder::new()
+        .uint256(123)
+        .uint256(456)
+        .uint256(789)
+        .build();
+    set_call_data_with_params(context, &TEST_ADD_MOD_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -205,10 +194,12 @@ fn test_add_mod(executor: &ContractExecutor, context: &mut MockContext) {
     );
 }
 fn test_mul_mod(executor: &ContractExecutor, context: &mut MockContext) {
-    let selector = calculate_selector("testMulMod(uint256,uint256,uint256)");
-    println!("=== Testing testMulMod ==={:x?}", selector);
-
-    set_function_call_data_with_three_uint256(context, &TEST_MUL_MOD_SELECTOR, 123, 456, 789);
+    let params = ParamBuilder::new()
+        .uint256(123)
+        .uint256(456)
+        .uint256(789)
+        .build();
+    set_call_data_with_params(context, &TEST_MUL_MOD_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -220,9 +211,8 @@ fn test_mul_mod(executor: &ContractExecutor, context: &mut MockContext) {
     assert_eq!(count_value, 69, "Mul Mod should be 69, got {}", count_value);
 }
 fn test_self_codesize(executor: &ContractExecutor, context: &mut MockContext) {
-    let selector = calculate_selector("getSelfCodeSize()");
-    println!("=== Testing getSelfCodeSize ==={:x?}", selector);
-    set_function_call_data(context, &GET_SELF_CODE_SIZE_SELECTOR);
+    set_call_data_with_params(context, &GET_SELF_CODE_SIZE_SELECTOR, vec![]);
+
     let result = executor
         .call_contract_function("advanced_host", context)
         .expect("Failed to call getSelfCodeSize()");
@@ -241,16 +231,16 @@ fn test_self_destruct(executor: &ContractExecutor, context: &mut MockContext) {
     let selector = calculate_selector("testSelfDestruct(address)");
     println!("=== Testing testSelfDestruct ==={:x?}", selector);
     let target_address = random_test_address(20);
-
-    set_function_call_data_with_address(context, &TEST_SELF_DESTRUCT_SELECTOR, &target_address);
+    let params = ParamBuilder::new().address(&target_address).build();
+    set_call_data_with_params(context, &TEST_SELF_DESTRUCT_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
         .expect("Failed to call testSelfDestruct()");
 
     assert!(result.success, "testSelfDestruct() should succeed");
-
-    set_function_call_data_with_address(context, &TEST_EXTERNAL_BALANCE_SELECTOR, &target_address);
+    let params = ParamBuilder::new().address(&target_address).build();
+    set_call_data_with_params(context, &TEST_EXTERNAL_BALANCE_SELECTOR, params);
 
     let result = executor
         .call_contract_function("advanced_host", context)
@@ -267,10 +257,7 @@ fn test_self_destruct(executor: &ContractExecutor, context: &mut MockContext) {
 }
 
 fn test_invalid(executor: &ContractExecutor, context: &mut MockContext) {
-    let selector = calculate_selector("testInvalid()");
-    println!("=== Testing testInvalid ==={:x?}", selector);
-
-    set_function_call_data(context, &TEST_INVALID_SELECTOR);
+    set_call_data_with_params(context, &TEST_INVALID_SELECTOR, vec![]);
 
     let result = executor
         .call_contract_function("advanced_host", context)
